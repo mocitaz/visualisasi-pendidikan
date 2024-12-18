@@ -1,0 +1,74 @@
+import pandas as pd
+import streamlit as st
+import plotly.express as px
+
+# Membaca data yang sudah dibersihkan
+df = pd.read_csv("data_pendidikan_cleaned.csv")
+
+# Judul Aplikasi
+st.title("Visualisasi Data Pendidikan SD Indonesia 2023-2024")
+
+# Sidebar untuk filter provinsi
+st.sidebar.header("Filter Data")
+provinsi = st.sidebar.multiselect(
+    "Pilih Provinsi",
+    options=df["Provinsi"].unique(),
+    default=df["Provinsi"].unique()
+)
+
+# Filter berdasarkan input pengguna
+filtered_df = df[df["Provinsi"].isin(provinsi)]
+
+# Visualisasi 1: Jumlah Sekolah per Provinsi
+st.subheader("Jumlah Sekolah per Provinsi")
+sekolah_per_provinsi = filtered_df.groupby("Provinsi")["Sekolah"].sum().reset_index()
+fig_sekolah = px.bar(
+    sekolah_per_provinsi,
+    x="Provinsi",
+    y="Sekolah",
+    title="Jumlah Sekolah per Provinsi",
+    text_auto=True,
+    color="Sekolah"
+)
+st.plotly_chart(fig_sekolah)
+
+# Visualisasi 2: Kondisi Ruang Kelas
+st.subheader("Kondisi Ruang Kelas")
+kondisi_kelas = filtered_df.melt(
+    id_vars=["Provinsi"],
+    value_vars=[
+        "Ruang kelas(baik)", "Ruang kelas(rusak ringan)", 
+        "Ruang kelas(rusak sedang)", "Ruang kelas(rusak berat)"
+    ],
+    var_name="Kondisi",
+    value_name="Jumlah"
+)
+fig_kondisi = px.bar(
+    kondisi_kelas,
+    x="Provinsi",
+    y="Jumlah",
+    color="Kondisi",
+    title="Kondisi Ruang Kelas per Provinsi",
+    barmode="stack"
+)
+st.plotly_chart(fig_kondisi)
+
+# Visualisasi 3: Hubungan Siswa Mengulang dan Putus Sekolah
+st.subheader("Hubungan Siswa Mengulang dan Putus Sekolah")
+fig_siswa = px.scatter(
+    filtered_df,
+    x="Mengulang",
+    y="Putus Sekolah",
+    size="Siswa",
+    color="Provinsi",
+    hover_name="Provinsi",
+    title="Hubungan Siswa Mengulang dan Putus Sekolah"
+)
+st.plotly_chart(fig_siswa)
+
+# Statistik Deskriptif
+st.subheader("Statistik Deskriptif Dataset")
+st.write(filtered_df.describe())
+
+# Footer
+st.caption("Data: Dataset Pendidikan SD Indonesia 2023-2024 | Dibuat dengan Streamlit")
