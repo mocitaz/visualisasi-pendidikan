@@ -41,9 +41,13 @@ st.markdown(
 )
 
 # Membaca dataset
+st.subheader("📋 Dataset Pendidikan SD Indonesia 2023-2024")
+df = pd.read_csv("data_pendidikan_cleaned.csv")
+st.write(df)
+
 @st.cache_data
 def load_data():
-    return pd.read_csv("data_pendidikan_cleaned.csv")
+    return df
 
 df = load_data()
 
