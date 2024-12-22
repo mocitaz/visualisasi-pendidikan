@@ -3,6 +3,8 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 from st_aggrid import AgGrid, GridOptionsBuilder
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Konfigurasi Halaman
 st.set_page_config(page_title="Visualisasi Data Pendidikan", page_icon="📊", layout="wide")
@@ -198,25 +200,92 @@ else:
     st.plotly_chart(fig_heatmap, use_container_width=True)
     st.write("Heatmap ini membantu menganalisis hubungan antar variabel numerik untuk mengidentifikasi pola yang signifikan.")
 
-    # Tabel Interaktif Data Pendidikan
-    st.subheader("📋 Tabel Interaktif Data Pendidikan")
-    gb = GridOptionsBuilder.from_dataframe(filtered_df)
-    gb.configure_pagination(paginationAutoPageSize=True)
-    gb.configure_side_bar()
-    grid_options = gb.build()
-    AgGrid(filtered_df, gridOptions=grid_options)
-    st.write("Tabel interaktif ini memungkinkan eksplorasi data secara langsung, termasuk pencarian dan pengurutan data.")
+    # Treemap Visualisasi
+    st.subheader("📊 Treemap Distribusi Siswa per Provinsi")
+    fig_treemap = px.treemap(
+        filtered_df,
+        path=["Provinsi"],
+        values="Siswa",
+        title="Treemap Distribusi Siswa per Provinsi"
+    )
+    st.plotly_chart(fig_treemap, use_container_width=True)
+    st.write("Treemap ini memberikan gambaran visual tentang distribusi jumlah siswa di setiap provinsi dengan ukuran area mewakili jumlah siswa.")
 
-    # Statistik Deskriptif
-    st.subheader("📊 Statistik Deskriptif Dataset")
-    statistik_provinsi = filtered_df.groupby("Provinsi").sum(numeric_only=True).reset_index()
-    st.dataframe(statistik_provinsi)
-    st.write("Tabel ini menunjukkan statistik deskriptif, seperti jumlah total siswa, sekolah, dan kondisi ruang kelas.")
+    # Stacked Bar Chart
+    st.subheader("📊 Stacked Bar Chart: Jumlah Siswa Berdasarkan Kondisi Ruang Kelas")
+    fig_stacked = px.bar(
+        filtered_df,
+        x="Provinsi",
+        y=["Ruang kelas(baik)", "Ruang kelas(rusak ringan)", "Ruang kelas(rusak sedang)", "Ruang kelas(rusak berat)"],
+        title="Jumlah Siswa Berdasarkan Kondisi Ruang Kelas per Provinsi",
+        labels={"value": "Jumlah Siswa", "variable": "Kondisi Ruang Kelas"},
+        text_auto=True
+    )
+    st.plotly_chart(fig_stacked, use_container_width=True)
+
+    # Violin Plot
+    st.subheader("📊 Violin Plot: Distribusi Jumlah Siswa per Provinsi")
+    fig_violin = px.violin(
+        filtered_df, 
+        x="Provinsi", 
+        y="Siswa", 
+        box=True, 
+        points="all", 
+        title="Distribusi Jumlah Siswa per Provinsi"
+    )
+    st.plotly_chart(fig_violin, use_container_width=True)
+
+    # Pair Plot
+    st.subheader("📊 Pair Plot: Hubungan Antar Variabel")
+    sns.set(style="ticks")
+    pairplot = sns.pairplot(filtered_df.select_dtypes(include=["number"]))
+    st.pyplot(pairplot)
+    st.write("Pair plot ini menunjukkan hubungan antar berbagai variabel numerik.")
+
+    # Bubble Chart
+    st.subheader("🔵 Bubble Chart: Jumlah Siswa per Provinsi")
+    fig_bubble = px.scatter(
+        filtered_df,
+        x="Provinsi",
+        y="Ruang kelas(baik)",
+        size="Siswa",
+        color="Provinsi",
+        title="Bubble Chart: Jumlah Siswa per Provinsi",
+        hover_name="Provinsi"
+    )
+    st.plotly_chart(fig_bubble, use_container_width=True)
+
+# Tabel Interaktif Data Pendidikan dan Statistik Deskriptif
+st.subheader("📋 Tabel Interaktif Data Pendidikan")
+gb = GridOptionsBuilder.from_dataframe(filtered_df)
+gb.configure_pagination(paginationAutoPageSize=True)
+gb.configure_side_bar()
+grid_options = gb.build()
+AgGrid(filtered_df, gridOptions=grid_options)
+st.write("Tabel interaktif ini memungkinkan eksplorasi data secara langsung, termasuk pencarian dan pengurutan data.")
+
+st.subheader("📊 Statistik Deskriptif Dataset")
+statistik_provinsi = filtered_df.groupby("Provinsi").sum(numeric_only=True).reset_index()
+st.dataframe(statistik_provinsi)
+st.write("Tabel ini menunjukkan statistik deskriptif, seperti jumlah total siswa, sekolah, dan kondisi ruang kelas.")
+
+# Footer dengan Kesimpulan
+st.markdown(
+    """
+    ### 📚 Kesimpulan
+    Proyek ini memberikan wawasan yang mendalam mengenai kondisi pendidikan di tingkat Sekolah Dasar (SD) di Indonesia selama tahun ajaran 2023-2024. Dengan memanfaatkan teknologi visualisasi data interaktif menggunakan **Streamlit** dan **Plotly**, pengguna dapat dengan mudah memahami distribusi jumlah siswa, kondisi ruang kelas, serta jumlah sekolah di setiap provinsi di Indonesia.
+
+    Fitur-fitur yang ada dalam aplikasi ini, seperti filter berdasarkan provinsi, tahun, dan jumlah siswa, serta visualisasi berbagai jenis grafik dan korelasi antar variabel, memberikan pemahaman yang lebih baik mengenai pola-pola yang ada dalam pendidikan SD. Pengguna juga dapat mengunduh dataset yang digunakan untuk analisis lebih lanjut dan mengambil keputusan berbasis data.
+
+    Dengan adanya visualisasi ini, diharapkan dapat memberikan informasi yang bermanfaat untuk pengambil kebijakan, peneliti, dan masyarakat umum dalam upaya meningkatkan kualitas pendidikan di Indonesia.
+    """,
+    unsafe_allow_html=True
+)
 
 # Fitur Download Dataset
 st.subheader("📥 Download Dataset")
 csv = df.to_csv(index=False).encode('utf-8')
 st.download_button(label="Download CSV", data=csv, file_name="data_pendidikan_cleaned.csv", mime="text/csv")
 
-# Footer
+# Catatan Footer
 st.caption("Catatan: Dataset Pendidikan SD Indonesia 2023-2024 | Dibuat dengan Streamlit dan Plotly")
